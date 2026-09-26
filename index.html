@@ -280,7 +280,7 @@ body {
             width: 100vw;
             pointer-events: none;
             transform: translateX(-100%);
-            transition: transform 0.4s cubic-bezier(0.8, 0, 0.2, 1);
+            transition: transform 0.4s cubic-bezier(0.8, 0, 0.2, 1) 0.15s;
         }
         #cinematic-overlay-layer1 {
             top: 0;
@@ -638,6 +638,14 @@ body {
         }
         renderPhysics();
 
+
+        // GLOBAL SHOCKWAVE INTERACTION
+        window.addEventListener('click', (e) => {
+            // Ignore clicks on shortcuts or the search box so we don't double-fire
+            if (e.target.closest('.side-link') || e.target.closest('#searchform')) return;
+            shockwaves.push({ x: e.clientX, y: e.clientY, radius: 0, force: 150 });
+        });
+
         // TRIGGER CINEMATIC WIPE ON NAVIGATION
         function triggerCinematicWipe(url, originX, originY) {
             document.getElementById('cinematic-overlay-layer1').classList.add('wipe-in-active');
@@ -652,7 +660,7 @@ body {
             
             setTimeout(() => {
                 window.location.href = url;
-            }, 450);
+            }, 600);
         }
 
         // Intercept Sidebar Link Clicks
