@@ -314,7 +314,7 @@ body {
 
     </style>
 </head>
-<body>
+<body class="dashboard-body">
 
 <div id="cinematic-overlay-layer1">警 告</div>
 <div id="cinematic-overlay-layer2">SYSTEM OVERRIDE // MAGI PROTOCOL ENGAGED</div>
@@ -639,6 +639,53 @@ body {
         renderPhysics();
 
 
+
+        // ON-LOAD SLIDE OUT (Dynamic Direction)
+        window.addEventListener('DOMContentLoaded', () => {
+            const layer1 = document.getElementById('cinematic-overlay-layer1');
+            const layer2 = document.getElementById('cinematic-overlay-layer2');
+            
+            // Start at center
+            layer1.style.transition = 'none';
+            layer2.style.transition = 'none';
+            layer1.style.transform = 'translateX(0%)';
+            layer2.style.transform = 'translateX(0%)';
+
+            void layer1.offsetWidth; // Force reflow
+
+            const isBack = sessionStorage.getItem('is_back_nav') === 'true';
+            sessionStorage.removeItem('is_back_nav');
+
+            layer1.style.transition = 'transform 0.4s cubic-bezier(0.8, 0, 0.2, 1) 0.1s';
+            layer2.style.transition = 'transform 0.4s cubic-bezier(0.8, 0, 0.2, 1) 0.1s';
+
+            if (isBack) {
+                // Reverse wipe (slide out to left)
+                layer1.style.transform = 'translateX(-100%)';
+                layer2.style.transform = 'translateX(-100%)';
+            } else {
+                // Normal wipe (slide out to right)
+                layer1.style.transform = 'translateX(100%)';
+                layer2.style.transform = 'translateX(100%)';
+            }
+            
+            // Reset for future wipe-ins
+            setTimeout(() => {
+                layer1.style.transition = 'none';
+                layer2.style.transition = 'none';
+                layer1.style.transform = 'translateX(-100%)';
+                layer2.style.transform = 'translateX(-100%)';
+                
+                // Clear inline styles so CSS classes can take over again
+                setTimeout(() => {
+                    layer1.style.transition = '';
+                    layer2.style.transition = '';
+                    layer1.style.transform = '';
+                    layer2.style.transform = '';
+                }, 50);
+            }, 600);
+        });
+
         // GLOBAL SHOCKWAVE INTERACTION
         window.addEventListener('click', (e) => {
             // Ignore clicks on shortcuts so we don't double-fire the cinematic transition wave
@@ -761,6 +808,7 @@ body {
         // FORCE RELOAD ON BACK BUTTON (bfcache invalidation) & RESET
         window.addEventListener('pageshow', (e) => {
             if (e.persisted) {
+                sessionStorage.setItem('is_back_nav', 'true');
                 window.location.reload();
             }
             
