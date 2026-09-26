@@ -758,6 +758,26 @@ body {
             }
         });
 
+        // FORCE RELOAD ON BACK BUTTON (bfcache invalidation) & RESET
+        window.addEventListener('pageshow', (e) => {
+            if (e.persisted) {
+                window.location.reload();
+            }
+            
+            // Failsafe: always clear inputs
+            const sb = document.getElementById('searchbox');
+            const gb = document.getElementById('ghostbox');
+            if(sb) sb.value = '';
+            if(gb) gb.value = '';
+            
+            // Remove cinematic classes if they were cached
+            const layer1 = document.getElementById('cinematic-overlay-layer1');
+            const layer2 = document.getElementById('cinematic-overlay-layer2');
+            if (layer1) layer1.classList.remove('wipe-in-active');
+            if (layer2) layer2.classList.remove('wipe-in-active');
+        });
+
+
 </script>
 </body>
 </html>
