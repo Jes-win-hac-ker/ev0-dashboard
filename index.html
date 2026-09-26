@@ -730,11 +730,20 @@ body {
         document.getElementById('searchbox').addEventListener('keydown', (e) => {
             const ghostbox = document.getElementById('ghostbox');
             const searchbox = document.getElementById('searchbox');
-            if ((e.key === 'Tab' || e.key === 'ArrowRight') && ghostbox.value && ghostbox.value.length > searchbox.value.length) {
-                e.preventDefault();
-                searchbox.value = ghostbox.value;
-                // Dispatch input event to fetch new suggestions for the completed word
-                searchbox.dispatchEvent(new Event('input'));
+            if (ghostbox.value && ghostbox.value.length > searchbox.value.length) {
+                if (e.key === 'Tab') {
+                    e.preventDefault();
+                    searchbox.value = ghostbox.value;
+                    // Auto-execute search with the cinematic wipe
+                    const url = 'https://www.google.com/search?q=' + encodeURIComponent(searchbox.value);
+                    const searchRect = searchbox.getBoundingClientRect();
+                    triggerCinematicWipe(url, searchRect.left + searchRect.width/2, searchRect.top + searchRect.height/2);
+                } else if (e.key === 'ArrowRight') {
+                    e.preventDefault();
+                    searchbox.value = ghostbox.value;
+                    // Dispatch input event to fetch new suggestions for the completed word
+                    searchbox.dispatchEvent(new Event('input'));
+                }
             }
         });
 
