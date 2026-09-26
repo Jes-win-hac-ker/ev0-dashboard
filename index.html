@@ -641,8 +641,8 @@ body {
 
         // GLOBAL SHOCKWAVE INTERACTION
         window.addEventListener('click', (e) => {
-            // Ignore clicks on shortcuts or the search box so we don't double-fire
-            if (e.target.closest('.side-link') || e.target.closest('#searchform')) return;
+            // Ignore clicks on shortcuts so we don't double-fire the cinematic transition wave
+            if (e.target.closest('.side-link')) return;
             shockwaves.push({ x: e.clientX, y: e.clientY, radius: 0, force: 150 });
         });
 
