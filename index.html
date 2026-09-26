@@ -674,6 +674,70 @@ body {
             });
         });
 
+
+        // GHOST BOX AUTO-SUGGEST VIA GOOGLE JSONP
+        window.handleGhostSuggest = function(data) {
+            const ghostbox = document.getElementById('ghostbox');
+            const searchbox = document.getElementById('searchbox');
+            if (!data || !data[1] || data[1].length === 0) {
+                ghostbox.value = '';
+                return;
+            }
+            
+            const suggestions = data[1];
+            const currentInput = searchbox.value;
+            
+            if (currentInput.trim() === '') {
+                ghostbox.value = '';
+                return;
+            }
+            
+            let matched = false;
+            for (let i = 0; i < suggestions.length; i++) {
+                // Ensure it's a string, some suggestions might be objects in newer APIs
+                const suggestion = (typeof suggestions[i] === 'string') ? suggestions[i] : suggestions[i][0];
+                if (suggestion && typeof suggestion === 'string' && suggestion.toLowerCase().startsWith(currentInput.toLowerCase())) {
+                    ghostbox.value = currentInput + suggestion.substring(currentInput.length);
+                    matched = true;
+                    break;
+                }
+            }
+            
+            if (!matched) {
+                ghostbox.value = '';
+            }
+        };
+
+        let debounceTimer;
+        document.getElementById('searchbox').addEventListener('input', (e) => {
+            const query = e.target.value;
+            const ghostbox = document.getElementById('ghostbox');
+            if (query.trim() === '') {
+                ghostbox.value = '';
+                return;
+            }
+            
+            clearTimeout(debounceTimer);
+            debounceTimer = setTimeout(() => {
+                const script = document.createElement('script');
+                script.src = `https://suggestqueries.google.com/complete/search?client=chrome&q=${encodeURIComponent(query)}&callback=handleGhostSuggest`;
+                document.body.appendChild(script);
+                script.onload = () => script.remove();
+                script.onerror = () => script.remove();
+            }, 100);
+        });
+
+        document.getElementById('searchbox').addEventListener('keydown', (e) => {
+            const ghostbox = document.getElementById('ghostbox');
+            const searchbox = document.getElementById('searchbox');
+            if ((e.key === 'Tab' || e.key === 'ArrowRight') && ghostbox.value && ghostbox.value.length > searchbox.value.length) {
+                e.preventDefault();
+                searchbox.value = ghostbox.value;
+                // Dispatch input event to fetch new suggestions for the completed word
+                searchbox.dispatchEvent(new Event('input'));
+            }
+        });
+
         // Intercept Search Form Submission
         document.getElementById('searchform').addEventListener('submit', (e) => {
             e.preventDefault();
