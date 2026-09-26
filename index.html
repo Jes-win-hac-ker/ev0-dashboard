@@ -49,7 +49,7 @@ body {
             justify-content: center;
             width: 100%;
         }
-        .search-container::before { display: none; 
+        .search-container::before {  
             content: ">";
             position: absolute;
             left: calc(50% - 240px);
@@ -117,7 +117,7 @@ body {
             z-index: 10;
         }
         #trace-output {
-            display: none;
+            
             text-align: left;
             margin: 0 auto;
             width: 500px;
@@ -296,7 +296,7 @@ body {
             width: 100vw;
             pointer-events: none;
             transform: translateX(-100%);
-            display: none;
+            
         }
         #cinematic-overlay-layer1 {
             top: 0;
@@ -325,7 +325,7 @@ body {
             z-index: 2147483647;
         }
         .wipe-in-active {
-            display: block !important;
+            
             animation: dashboard-wipe-in 0.4s cubic-bezier(0.8, 0, 0.2, 1) forwards !important;
         }
 
@@ -446,7 +446,7 @@ body {
         let lastMouse = { x: -1000, y: -1000 };
 
         window.addEventListener('mousedown', (e) => {
-            shockwaves.push({ x: e.clientX, y: e.clientY, radius: 0, force: 120 });
+            
         });
 
 
@@ -664,7 +664,7 @@ body {
             document.getElementById('cinematic-overlay-layer2').classList.add('wipe-in-active');
             
             // Fire giant physics shockwaves
-            shockwaves.push({ x: width/2, y: height/2, radius: 0, force: 150 });
+            
             
             setTimeout(() => {
                 window.location.href = url;
