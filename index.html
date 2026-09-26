@@ -1,0 +1,697 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TERMINAL // EV0</title>
+    <style>
+body {
+            background-color: #050505;
+            color: #ff003c;
+            font-family: 'Orbitron', 'Courier New', Courier, monospace;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+            margin: 0;
+            overflow: hidden;
+            text-shadow: 0 0 8px rgba(255, 0, 60, 0.6);
+        }
+        /* The Canvas Physics Layer */
+        #physics-canvas {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            z-index: 1; /* Below the UI, but above the black background */
+        }
+        .container {
+            text-align: center;
+            z-index: 10;
+            display: inline-flex;
+            flex-direction: column;
+            align-items: stretch;
+            width: max-content;
+        }
+        pre {
+            font-size: 1.1rem;
+            font-weight: bold;
+            margin-bottom: 2rem;
+            line-height: 1.2;
+            letter-spacing: 2px;
+        }
+        .search-container {
+            position: relative;
+            margin-bottom: 2rem;
+            display: flex;
+            justify-content: center;
+            width: 100%;
+        }
+        .search-container::before { display: none; 
+            content: ">";
+            position: absolute;
+            left: calc(50% - 240px);
+            top: 50%;
+            transform: translateY(-50%);
+            color: #ff003c;
+            font-weight: bold;
+        }
+        input[type="text"] {
+            background: rgba(10, 10, 10, 0.8);
+            backdrop-filter: blur(5px);
+            border: 1px solid #333;
+            border-bottom: 2px solid #ff003c;
+            color: #e0e0e0;
+            padding: 12px 20px 12px 30px;
+            width: 100%;
+            box-sizing: border-box;
+            font-family: inherit;
+            font-size: 1rem;
+            outline: none;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.5);
+            transition: all 0.3s ease;
+        }
+        input[type="text"]:focus {
+            border: 1px solid #ff003c;
+            box-shadow: 0 0 20px rgba(255, 0, 60, 0.4);
+            background: rgba(17, 17, 17, 0.9);
+        }
+        
+        a {
+            color: #ff003c;
+            text-decoration: none;
+            border: 1px solid rgba(255, 0, 60, 0.3);
+            padding: 8px 24px;
+            text-transform: uppercase;
+            font-size: 1.2rem;
+            letter-spacing: 1px;
+            transition: all 0.2s ease;
+            background: rgba(255, 0, 60, 0.05);
+            backdrop-filter: blur(3px);
+        }
+        a:hover {
+            background: #ff003c;
+            color: #050505;
+            box-shadow: 0 0 15px #ff003c;
+            text-shadow: none;
+            border: 1px solid #ff003c;
+        }
+        .scanlines {
+            position: fixed;
+            top: 0; left: 0; width: 100vw; height: 100vh;
+            background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.25) 50%), 
+                        linear-gradient(90deg, rgba(255, 0, 0, 0.06), rgba(0, 255, 0, 0.02), rgba(0, 0, 255, 0.06));
+            background-size: 100% 4px, 3px 100%;
+            pointer-events: none;
+            z-index: 100;
+            opacity: 0.6;
+        }
+        .status {
+            position: absolute;
+            bottom: 20px;
+            left: 20px;
+            font-size: 0.75rem;
+            opacity: 0.5;
+            z-index: 10;
+        }
+        #trace-output {
+            display: none;
+            text-align: left;
+            margin: 0 auto;
+            width: 500px;
+            height: 150px;
+            font-size: 0.9rem;
+            line-height: 1.5;
+            background: rgba(0,0,0,0.7);
+            padding: 20px;
+            border-left: 2px solid #ff003c;
+        }
+    
+        #search-wrap {
+            position: relative;
+            width: 500px;
+            margin: 0 auto 2rem auto;
+            display: block;
+        }
+        
+        #searchform {
+            margin: 0;
+            padding: 0;
+        }
+
+        /* The Ghost Box sits underneath. It gets the glass background. */
+        #ghostbox {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 1;
+            
+            background: rgba(10, 10, 10, 0.8) !important;
+            backdrop-filter: blur(5px) !important;
+            
+            color: rgba(255, 255, 255, 0.4) !important;
+            text-shadow: none !important;
+            border-color: transparent !important;
+            pointer-events: none;
+            
+            /* Match alignment */
+            box-sizing: border-box;
+            padding: 12px 20px 12px 30px !important;
+            font-size: 1rem !important;
+            font-family: inherit !important;
+            text-align: left !important;
+        }
+
+        /* The Real Search Box sits on top. It must be completely transparent. */
+        #searchbox {
+            position: relative;
+            width: 100%;
+            z-index: 2;
+            
+            background: transparent !important;
+            backdrop-filter: none !important; /* CRITICAL: Do not blur the ghost text underneath */
+            
+            color: #ffffff !important;
+            text-shadow: 0 0 10px rgba(255, 255, 255, 0.5) !important;
+            
+            /* Match alignment */
+            box-sizing: border-box;
+            padding: 12px 20px 12px 30px !important;
+            font-size: 1rem !important;
+            font-family: inherit !important;
+            text-align: left !important;
+        }
+        
+        #searchbox:focus {
+            background: transparent !important;
+            box-shadow: none !important;
+        }
+        
+        /* Apply the glowing border only to the wrapper, or keep it on the inputs */
+        #ghostbox, #searchbox {
+            border: 1px solid #333 !important;
+            border-bottom: 2px solid #ff003c !important;
+        }
+
+    
+        
+        
+
+    
+        
+
+    
+
+
+
+        
+        
+
+    
+        
+    
+        /* Side Navigation */
+        .side-nav {
+            position: fixed;
+            left: 0px;
+            top: 50%;
+            transform: translateY(-50%);
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            z-index: 100;
+        }
+        .side-link {
+            position: relative;
+            display: flex;
+            align-items: center;
+            text-decoration: none !important;
+            cursor: pointer;
+            border: none !important;
+            background: transparent !important;
+            padding: 0 !important;
+        }
+        .link-icon {
+            z-index: 2;
+            background: #050505;
+            color: #ff003c;
+            padding: 10px 12px; 
+            min-width: 56px;
+            height: 52px;
+            box-sizing: border-box;
+            border-radius: 0 5px 5px 0; 
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-family: 'Orbitron', monospace;
+            font-size: 15px;
+            font-weight: bold;
+            transition: all 0.3s ease;
+        }
+        .link-text {
+            position: absolute;
+            left: 0px;
+            z-index: 1;
+            background: rgba(10, 10, 10, 0.9);
+            border: 1px solid rgba(255, 0, 60, 0.4);
+            border-left: none;
+            padding: 8px 15px 8px 50px; /* Sits behind icon */
+            color: #ff003c;
+            font-size: 0.85rem;
+            font-weight: bold;
+            letter-spacing: 2px;
+            opacity: 0;
+            transform: translateX(0);
+            pointer-events: none;
+            transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            white-space: nowrap;
+            border-radius: 0 5px 5px 0;
+        }
+        .side-link:hover .link-icon {
+            color: #fff;
+            transform: scale(1.1);
+            text-shadow: 0 0 10px #ff003c;
+            filter: drop-shadow(0 0 8px rgba(255,0,60,0.8));
+        }
+        .side-link:hover .link-text {
+            opacity: 1;
+            transform: translateX(45px);
+        }
+100% { opacity: 1; filter: blur(0px); text-shadow: 0 0 30px #ff003c; }
+        }
+
+    
+        /* DASHBOARD SLIDE-IN OVERLAY */
+        @keyframes dashboard-wipe-in {
+            0%   { transform: translateX(-100%); }
+            100% { transform: translateX(0%); }
+        }
+        #cinematic-overlay-layer1, #cinematic-overlay-layer2 {
+            position: fixed;
+            left: 0;
+            width: 100vw;
+            pointer-events: none;
+            transform: translateX(-100%);
+            display: none;
+        }
+        #cinematic-overlay-layer1 {
+            top: 0;
+            height: 100vh;
+            background: repeating-linear-gradient(0deg, #ff003c, #ff003c 4px, #cc0030 4px, #cc0030 8px);
+            color: #050505;
+            font-family: 'Noto Sans CJK JP', 'Orbitron', sans-serif;
+            font-size: 25vw;
+            font-weight: 900;
+            line-height: 100vh;
+            text-align: center;
+            white-space: nowrap;
+            overflow: hidden;
+            z-index: 2147483646;
+        }
+        #cinematic-overlay-layer2 {
+            top: 65vh;
+            height: 35vh;
+            color: #ffffff;
+            font-family: 'Orbitron', 'Courier New', monospace;
+            font-size: 1.5rem;
+            font-weight: bold;
+            letter-spacing: 8px;
+            text-align: center;
+            text-shadow: 0 0 10px rgba(255, 255, 255, 0.8);
+            z-index: 2147483647;
+        }
+        .wipe-in-active {
+            display: block !important;
+            animation: dashboard-wipe-in 0.4s cubic-bezier(0.8, 0, 0.2, 1) forwards !important;
+        }
+
+    </style>
+</head>
+<body>
+
+<div id="cinematic-overlay-layer1">警 告</div>
+<div id="cinematic-overlay-layer2">SYSTEM OVERRIDE // MAGI PROTOCOL ENGAGED</div>
+
+<div id="system-target" style="font-family: 'Courier New', monospace; font-size: 1rem; color: rgba(255,0,60,0.7); margin-top: 15px; letter-spacing: 2px;">> INITIALIZING NEURAL LINK...</div>
+    </div>
+
+    <canvas id="physics-canvas"></canvas>
+    <div class="scanlines"></div>
+    <!-- Side Navigation Links -->
+    <div class="side-nav">
+        <a href="https://github.com" class="side-link">
+            <div class="link-text">GITHUB</div>
+            <div class="link-icon"><svg viewBox="0 0 24 24" fill="currentColor" width="32" height="32"><path d="M12 2A10 10 0 0 0 2 12c0 4.42 2.87 8.17 6.84 9.5c.5.08.66-.23.66-.5v-1.69c-2.77.6-3.36-1.34-3.36-1.34c-.45-1.15-1.11-1.46-1.11-1.46c-.9-.62.07-.6.07-.6c1 .07 1.53 1.03 1.53 1.03c.87 1.52 2.34 1.07 2.91.83c.09-.65.35-1.09.63-1.34c-2.22-.25-4.55-1.11-4.55-4.92c0-1.11.38-2 1.03-2.71c-.1-.25-.45-1.29.1-2.64c0 0 .84-.27 2.75 1.02c.79-.22 1.65-.33 2.5-.33c.85 0 1.71.11 2.5.33c1.91-1.29 2.75-1.02 2.75-1.02c.55 1.35.2 2.39.1 2.64c.65.71 1.03 1.6 1.03 2.71c0 3.82-2.34 4.66-4.57 4.91c.36.31.69.92.69 1.85V21c0 .27.16.59.67.5C19.14 20.16 22 16.42 22 12A10 10 0 0 0 12 2z"/></svg></div>
+        </a>
+        <a href="https://youtube.com" class="side-link">
+            <div class="link-text">YOUTUBE</div>
+            <div class="link-icon"><svg viewBox="0 0 24 24" fill="currentColor" width="32" height="32"><path d="M23.5 6.18a3 3 0 0 0-2.11-2.13C19.52 3.5 12 3.5 12 3.5s-7.52 0-9.39.55A3 3 0 0 0 .5 6.18C0 8.07 0 12 0 12s0 3.93.5 5.82a3 3 0 0 0 2.11 2.13c1.87.55 9.39.55 9.39.55s7.52 0 9.39-.55a3 3 0 0 0 2.11-2.13C24 15.93 24 12 24 12s0-3.93-.5-5.82zM9.54 15.57V8.43L15.82 12l-6.28 3.57z"/></svg></div>
+        </a>
+        <a href="https://mail.google.com" class="side-link">
+            <div class="link-text">GMAIL</div>
+            <div class="link-icon"><svg viewBox="0 0 24 24" fill="currentColor" width="32" height="32"><path d="M20 4H4C2.9 4 2 4.9 2 6v12c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 4l-8 5-8-5V6l8 5 8-5v2z"/></svg></div>
+        </a>
+        <a href="https://web.whatsapp.com" class="side-link">
+            <div class="link-text">WHATSAPP</div>
+            <div class="link-icon"><svg viewBox="0 0 24 24" fill="currentColor" width="32" height="32"><path d="M12.03 2.01c-5.46 0-9.91 4.45-9.91 9.91c0 1.74.45 3.42 1.31 4.92L2.01 22l5.3-1.39c1.46.81 3.1 1.24 4.77 1.24h.01c5.46 0 9.9-4.45 9.9-9.91c0-5.46-4.44-9.91-9.9-9.91zm0 18.04c-1.47 0-2.9-.39-4.16-1.13l-.3-.18l-3.09.81l.82-3.02l-.2-.32a8.21 8.21 0 0 1-1.25-4.38c0-4.54 3.69-8.24 8.23-8.24s8.24 3.7 8.24 8.24s-3.7 8.23-8.24 8.23zm4.52-6.17c-.25-.13-1.48-.73-1.71-.82c-.23-.08-.4-.13-.57.12c-.17.25-.65.82-.79.99c-.15.17-.3.19-.55.06c-.25-.13-1.06-.39-2.02-1.25c-.75-.67-1.25-1.5-1.4-1.75c-.15-.25-.02-.38.11-.5c.11-.11.25-.29.37-.43c.13-.15.17-.25.25-.42c.08-.17.04-.32-.02-.44c-.06-.13-.57-1.38-.78-1.89c-.21-.5-.42-.43-.57-.44c-.15-.01-.3-.01-.47-.01c-.17 0-.44.06-.67.32c-.23.25-.87.85-.87 2.08s.89 2.4 1.01 2.57c.13.17 1.75 2.68 4.24 3.75c.59.25 1.05.41 1.41.52c.6.19 1.15.16 1.58.1c.48-.07 1.48-.61 1.69-1.2c.21-.59.21-1.1.15-1.2c-.06-.11-.23-.17-.48-.3z"/></svg></div>
+        </a>
+        <a href="https://discord.com/app" class="side-link">
+            <div class="link-text">DISCORD</div>
+            <div class="link-icon"><svg viewBox="0 0 24 24" fill="currentColor" width="32" height="32"><path d="M20.32 4.14A19.98 19.98 0 0 0 15.22 2.5a.08.08 0 0 0-.08.04c-.21.4-.44.89-.6 1.3a18.3 18.3 0 0 0-5.11 0a12.83 12.83 0 0 0-.61-1.3a.08.08 0 0 0-.08-.04c-1.73.47-3.37 1.16-4.9 2.04a.07.07 0 0 0-.03.03C.68 9.94-.33 15.2.08 20.35a.08.08 0 0 0 .03.06a19.8 19.8 0 0 0 6 3.03a.08.08 0 0 0 .08-.03c.46-.63.88-1.29 1.25-1.98a.08.08 0 0 0-.04-.11c-1.42-.54-2.8-1.2-4.1-1.98a.08.08 0 0 1-.01-.13c.27-.2.53-.41.79-.62a.08.08 0 0 1 .08-.01c4.46 2.04 9.3 2.04 13.72 0a.08.08 0 0 1 .09 0c.26.21.52.42.79.62a.08.08 0 0 1-.01.13c-1.3.77-2.68 1.44-4.1 1.98a.08.08 0 0 0-.04.11c.37.69.8 1.35 1.26 1.98a.08.08 0 0 0 .09.03a19.78 19.78 0 0 0 6-3.03a.08.08 0 0 0 .03-.06c.49-5.91-1.07-11.08-4.04-15.53a.1.1 0 0 0-.03-.03zM8.02 16.14c-1.18 0-2.16-1.09-2.16-2.43s.96-2.43 2.16-2.43c1.2 0 2.17 1.1 2.16 2.43c0 1.34-.96 2.43-2.16 2.43zm7.95 0c-1.18 0-2.16-1.09-2.16-2.43s.96-2.43 2.16-2.43c1.2 0 2.17 1.1 2.16 2.43c0 1.34-.96 2.43-2.16 2.43z"/></svg></div>
+        </a>
+        <!-- AI Shortcuts -->
+        <div style="width: 25px; height: 2px; background: rgba(255,0,60,0.3); margin: 5px 0; border-radius: 0 2px 2px 0;"></div>
+        <a href="https://chatgpt.com" class="side-link">
+            <div class="link-text">CHATGPT</div>
+            <div class="link-icon"><svg viewBox="0 0 24 24" width="32" height="32" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M11.217 19.384a3.501 3.501 0 0 0 6.783 -1.217v-5.167l-6 -3.35"/><path d="M5.214 15.014a3.501 3.501 0 0 0 4.446 5.266l4.34 -2.534v-6.946"/><path d="M6 7.63c-1.391 -.236 -2.787 .395 -3.534 1.689a3.474 3.474 0 0 0 1.271 4.745l4.263 2.514l6 -3.348"/><path d="M12.783 4.616a3.501 3.501 0 0 0 -6.783 1.217v5.067l6 3.45"/><path d="M18.786 8.986a3.501 3.501 0 0 0 -4.446 -5.266l-4.34 2.534v6.946"/><path d="M18 16.302c1.391 .236 2.787 -.395 3.534 -1.689a3.474 3.474 0 0 0 -1.271 -4.745l-4.308 -2.514l-5.955 3.42"/></svg></div>
+        </a>
+        <a href="https://gemini.google.com" class="side-link">
+            <div class="link-text">GEMINI</div>
+            <div class="link-icon"><svg viewBox="0 0 24 24" width="32" height="32" fill="currentColor"><path d="M11.04 19.32Q12 21.51 12 24q0-2.49.93-4.68.96-2.19 2.58-3.81t3.81-2.55Q21.51 12 24 12q-2.49 0-4.68-.93a12.3 12.3 0 0 1-3.81-2.58 12.3 12.3 0 0 1-2.58-3.81Q12 2.49 12 0q0 2.49-.96 4.68-.93 2.19-2.55 3.81a12.3 12.3 0 0 1-3.81 2.58Q2.49 12 0 12q2.49 0 4.68.96 2.19.93 3.81 2.55t2.55 3.81"/></svg></div>
+        </a>
+        <a href="https://claude.ai" class="side-link">
+            <div class="link-text">CLAUDE</div>
+            <div class="link-icon"><svg viewBox="0 0 24 24" width="32" height="32" fill="currentColor"><path d="M17.3041 3.541h-3.6718l6.696 16.918H24Zm-10.6082 0L0 20.459h3.7442l1.3693-3.5527h7.0052l1.3693 3.5528h3.7442L10.5363 3.5409Zm-.3712 10.2232 2.2914-5.9456 2.2914 5.9456Z"/></svg></div>
+        </a>
+        <a href="https://chat.deepseek.com" class="side-link">
+            <div class="link-text">DEEPSEEK</div>
+            <div class="link-icon"><svg viewBox="0 0 24 24" width="32" height="32" fill="currentColor"><path d="M23.748 4.651c-.254-.124-.364.113-.512.233-.051.04-.094.09-.137.137-.372.397-.806.657-1.373.626-.829-.046-1.537.214-2.163.848-.133-.782-.575-1.248-1.247-1.548-.352-.155-.708-.311-.955-.65-.172-.24-.219-.509-.305-.774-.055-.16-.11-.323-.293-.35-.2-.031-.278.136-.356.276-.313.572-.434 1.202-.422 1.84.027 1.436.633 2.58 1.838 3.393.137.094.172.187.129.323-.082.28-.18.553-.266.833-.055.179-.137.218-.328.14a5.5 5.5 0 0 1-1.737-1.179c-.857-.828-1.631-1.743-2.597-2.46a12 12 0 0 0-.689-.47c-.985-.957.13-1.743.387-1.836.27-.098.094-.433-.778-.428-.872.003-1.67.295-2.687.685a3 3 0 0 1-.465.136 9.6 9.6 0 0 0-2.883-.101c-1.885.21-3.39 1.1-4.497 2.622C.082 8.776-.231 10.854.152 13.02c.403 2.284 1.568 4.175 3.36 5.653 1.857 1.533 3.997 2.284 6.438 2.14 1.482-.085 3.132-.284 4.994-1.86.47.234.962.328 1.78.398.629.058 1.235-.031 1.705-.129.735-.155.684-.836.418-.961-2.155-1.004-1.682-.595-2.112-.926 1.095-1.295 2.768-3.598 3.284-6.733.05-.346.115-.834.108-1.114-.004-.171.035-.238.23-.257a4.2 4.2 0 0 0 1.545-.475c1.397-.763 1.96-2.016 2.093-3.517.02-.23-.004-.467-.247-.588M11.58 18.168c-2.088-1.642-3.101-2.183-3.52-2.16-.39.024-.32.472-.234.763.09.288.207.487.371.74.114.167.192.416-.113.603-.673.416-1.842-.14-1.897-.168-1.361-.801-2.5-1.86-3.301-3.306-.775-1.393-1.225-2.888-1.299-4.482-.02-.385.094-.522.477-.592a4.7 4.7 0 0 1 1.53-.038c2.131.311 3.946 1.264 5.467 2.774.868.86 1.525 1.887 2.202 2.89.72 1.066 1.494 2.082 2.48 2.915.348.291.626.513.892.677-.802.09-2.14.109-3.055-.615zm1.001-6.44a.306.306 0 0 1 .415-.287.3.3 0 0 1 .113.074.3.3 0 0 1 .086.214c0 .17-.136.307-.308.307a.303.303 0 0 1-.306-.307m3.11 1.596c-.2.081-.4.151-.591.16a1.25 1.25 0 0 1-.798-.254c-.274-.23-.47-.358-.551-.758a1.7 1.7 0 0 1 .015-.588c.07-.327-.007-.537-.238-.727-.188-.156-.426-.199-.689-.199a.6.6 0 0 1-.254-.078.253.253 0 0 1-.114-.358 1 1 0 0 1 .192-.21c.356-.202.767-.136 1.146.016.352.144.618.408 1.001.782.392.451.462.576.685.915.176.264.336.536.446.848.066.194-.02.353-.25.45"/></svg></div>
+        </a>
+        <a href="https://chat.qwenlm.ai" class="side-link">
+            <div class="link-text">QWEN</div>
+            <div class="link-icon"><svg viewBox="0 0 24 24" width="32" height="32" fill="currentColor"><path d="M23.919 14.545 20.817 9.17l1.47-2.544a.56.56 0 0 0 0-.566l-1.633-2.83a.57.57 0 0 0-.49-.283h-6.207L12.487.402a.57.57 0 0 0-.49-.284H8.732a.56.56 0 0 0-.49.284L5.139 5.775h-2.94a.56.56 0 0 0-.49.284L.077 8.887a.56.56 0 0 0 0 .567L3.18 14.83l-1.47 2.545a.56.56 0 0 0 0 .566l1.634 2.83a.57.57 0 0 0 .49.283h6.205l1.47 2.545a.57.57 0 0 0 .49.284h3.266a.57.57 0 0 0 .49-.284l3.104-5.375h2.94a.57.57 0 0 0 .49-.283l1.634-2.828a.55.55 0 0 0-.004-.568M8.733.686l1.634 2.828-1.634 2.828H21.8L20.164 9.17H7.425L5.63 6.06Zm1.306 19.801-6.205-.002 1.634-2.83h3.265L2.201 6.344h3.267q3.182 5.517 6.367 11.032zm10.124-5.66L18.53 12l-6.532 11.315-1.634-2.83c2.129-3.673 4.25-7.351 6.373-11.028h3.592l3.102 5.374z"/></svg></div>
+        </a>
+        <a href="https://grok.com" class="side-link">
+            <div class="link-text">GROK</div>
+            <div class="link-icon"><svg viewBox="0 0 24 24" width="32" height="32" fill="currentColor"><path d="M14.234 10.162 22.977 0h-2.072l-7.591 8.824L7.251 0H.258l9.168 13.343L.258 24H2.33l8.016-9.318L16.749 24h6.993zm-2.837 3.299-.929-1.329L3.076 1.56h3.182l5.965 8.532.929 1.329 7.754 11.09h-3.182z"/></svg></div>
+        </a>
+        <a href="https://www.perplexity.ai" class="side-link">
+            <div class="link-text">PERPLEXITY</div>
+            <div class="link-icon"><svg viewBox="0 0 24 24" width="32" height="32" fill="currentColor"><path d="M22.3977 7.0896h-2.3106V.0676l-7.5094 6.3542V.1577h-1.1554v6.1966L4.4904 0v7.0896H1.6023v10.3976h2.8882V24l6.932-6.3591v6.2005h1.1554v-6.0469l6.9318 6.1807v-6.4879h2.8882V7.0896zm-3.4657-4.531v4.531h-5.355l5.355-4.531zm-13.2862.0676 4.8691 4.4634H5.6458V2.6262zM2.7576 16.332V8.245h7.8476l-6.1149 6.1147v1.9723H2.7576zm2.8882 5.0404v-3.8852h.0001v-2.6488l5.7763-5.7764v7.0111l-5.7764 5.2993zm12.7086.0248-5.7766-5.1509V9.0618l5.7766 5.7766v6.5588zm2.8882-5.0652h-1.733v-1.9723L13.3948 8.245h7.8478v8.087z"/></svg></div>
+        </a>
+    </div>
+
+    
+        <!-- AI Navigation Links (Right Side) -->
+    <div class="container">
+        <div class="header-module" style="display: flex; justify-content: center; align-items: stretch; gap: 40px; margin-bottom: 2rem;">
+            <pre style="margin-bottom: 0; text-align: left; display: flex; flex-direction: column; justify-content: center; line-height: 1.1;">
+███████╗██╗   ██╗ ██████╗ 
+██╔════╝██║   ██║██╔═████╗
+█████╗  ██║   ██║██║██╔██║
+██╔══╝  ╚██╗ ██╔╝████╔╝██║
+███████╗ ╚████╔╝ ╚██████╔╝
+╚══════╝  ╚═══╝   ╚═════╝  
+            </pre>
+                        <div class="clock-widget" style="display: flex; flex-direction: column; justify-content: center; align-items: flex-start; padding-left: 30px; border-left: 2px solid rgba(255, 0, 60, 0.3);">
+                <pre id="digital-clock" style="font-size: 0.65rem; font-weight: bold; letter-spacing: 0px; text-shadow: 0 0 15px rgba(255, 0, 60, 0.6); line-height: 1.1; margin: 0; text-align: left;"></pre>
+            </div>
+        </div>
+        <div id="ui-elements">
+            
+            <div class="search-container" id="search-wrap">
+            <input type="text" id="ghostbox" disabled tabindex="-1">
+            <form id="searchform" action="https://www.google.com/search" method="GET">
+                <input type="text" name="q" id="searchbox" placeholder="AWAITING INPUT..." autofocus autocomplete="off">
+            </form>
+        </div>
+
+            
+        </div>
+        <div id="trace-output"></div>
+    </div>
+
+
+    
+    
+    
+
+    
+
+    
+    <script>
+
+        // --- CORE INITIALIZATION ---
+        const canvas = document.getElementById('physics-canvas');
+        const ctx = canvas.getContext('2d');
+        let width, height;
+        let points = [];
+        const spacing = 45;
+        const mouse = { x: -1000, y: -1000, vx: 0, vy: 0 };
+        let shockwaves = [];
+        let lastMouse = { x: -1000, y: -1000 };
+
+        window.addEventListener('mousedown', (e) => {
+            shockwaves.push({ x: e.clientX, y: e.clientY, radius: 0, force: 120 });
+        });
+
+
+        
+
+        // --- ASCII CLOCK ENGINE ---
+                const asciiChars = {
+            '0': [" ██████╗ ", "██╔═████╗", "██║██╔██║", "████╔╝██║", "╚██████╔╝", " ╚═════╝ "],
+            '1': [" ██╗", "███║", "╚██║", " ██║", " ██║", " ╚═╝"],
+            '2': ["██████╗ ", "╚════██╗", " █████╔╝", "██╔═══╝ ", "███████╗", "╚══════╝"],
+            '3': ["██████╗ ", "╚════██╗", " █████╔╝", " ╚═══██╗", "██████╔╝", "╚═════╝ "],
+            '4': ["██╗  ██╗", "██║  ██║", "███████║", "╚════██║", "     ██║", "     ╚═╝"],
+            '5': ["███████╗", "██╔════╝", "███████╗", "╚════██║", "███████║", "╚══════╝"],
+            '6': [" ██████╗ ", "██╔════╝ ", "███████╗ ", "██╔═══██╗", "╚██████╔╝", " ╚═════╝ "],
+            '7': ["███████╗", "╚════██║", "    ██╔╝", "   ██╔╝ ", "   ██║  ", "   ╚═╝  "],
+            '8': [" █████╗ ", "██╔══██╗", "╚█████╔╝", "██╔══██╗", "╚█████╔╝", " ╚════╝ "],
+            '9': [" █████╗ ", "██╔══██╗", "╚██████║", " ╚═══██║", " █████╔╝", " ╚════╝ "],
+            ':': ["   ", "██╗", "╚═╝", "██╗", "╚═╝", "   "]
+        };
+
+        function updateClock() {
+            const now = new Date();
+            let h = now.getHours().toString().padStart(2, '0');
+            let m = now.getMinutes().toString().padStart(2, '0');
+            let s = now.getSeconds().toString().padStart(2, '0');
+            let timeString = h + ':' + m + ':' + s;
+            
+            let lines = ["", "", "", "", "", ""];
+            for (let i = 0; i < timeString.length; i++) {
+                let char = timeString[i];
+                let charArt = asciiChars[char];
+                for (let l = 0; l < 6; l++) {
+                    lines[l] += charArt[l] + "  ";
+                }
+            }
+            document.getElementById('digital-clock').textContent = lines.join('\n');
+        }
+        setInterval(updateClock, 1000);
+        updateClock();
+
+// AI Menu Toggle Logic
+        
+        
+        window.addEventListener('mousemove', (e) => {
+            lastMouse.x = mouse.x;
+            lastMouse.y = mouse.y;
+            mouse.x = e.clientX;
+            mouse.y = e.clientY;
+            mouse.vx = mouse.x - lastMouse.x;
+            mouse.vy = mouse.y - lastMouse.y;
+        });
+
+        // Clear mouse interaction when it leaves
+        window.addEventListener('mouseout', () => {
+            mouse.x = -1000;
+            mouse.y = -1000;
+            mouse.vx = 0;
+            mouse.vy = 0;
+        });
+
+        function initGrid() {
+            width = canvas.width = window.innerWidth;
+            height = canvas.height = window.innerHeight;
+            points = [];
+            cols = Math.floor(width / spacing) + 2;
+            rows = Math.floor(height / spacing) + 2;
+
+            for (let x = 0; x < cols; x++) {
+                for (let y = 0; y < rows; y++) {
+                    const px = x * spacing;
+                    const py = y * spacing;
+                    points.push({
+                        baseX: px,
+                        baseY: py,
+                        x: px,
+                        y: py,
+                        vx: 0,
+                        vy: 0,
+                        col: x,
+                        row: y
+                    });
+                }
+            }
+        }
+
+        window.addEventListener('resize', initGrid);
+        initGrid();
+
+        function renderPhysics() {
+            ctx.clearRect(0, 0, width, height);
+            
+            const time = Date.now() * 0.0015;
+            const maxDist = 200; 
+            
+            // Process expanding shockwaves
+            for (let i = shockwaves.length - 1; i >= 0; i--) {
+                let sw = shockwaves[i];
+                sw.radius += 35; // Expansion velocity
+                sw.force *= 0.96; // Dissipation rate (friction)
+                if (sw.force < 1) shockwaves.splice(i, 1);
+            }
+
+            // Calculate physics for each node
+            for (let i = 0; i < points.length; i++) {
+                const p = points[i];
+
+                // Ambient wave disabled; grid is perfectly flat until disturbed
+                let zAltitude = 0; 
+                let pushX = 0;
+                let pushY = 0;
+
+                // Overlay interactive 3D shockwave deformations
+                for (let j = 0; j < shockwaves.length; j++) {
+                    const sw = shockwaves[j];
+                    const dx = sw.x - p.baseX;
+                    const dy = sw.y - p.baseY;
+                    const dist = Math.sqrt(dx * dx + dy * dy);
+                    
+                    const ringDist = Math.abs(dist - sw.radius);
+                    if (ringDist < 150) { // Shockwave volume thickness
+                        const intensity = (1 - (ringDist / 150)) * sw.force;
+                        zAltitude += intensity * 1.5; // Massive vertical topographical lift
+                        
+                        const angle = Math.atan2(dy, dx);
+                        pushX -= Math.cos(angle) * (intensity * 0.4); // Kinetic lateral blowout
+                        pushY -= Math.sin(angle) * (intensity * 0.4);
+                    }
+                }
+
+                p.z = zAltitude; 
+                const dynamicBaseY = p.baseY + zAltitude + pushY;
+                const dynamicBaseX = p.baseX + pushX;
+
+                const dx = mouse.x - dynamicBaseX;
+                const dy = mouse.y - dynamicBaseY;
+                const dist = Math.sqrt(dx * dx + dy * dy);
+
+                if (dist < maxDist) {
+                    const force = (maxDist - dist) / maxDist;
+                    const angle = Math.atan2(dy, dx);
+                    const cursorSpeed = Math.min(Math.sqrt(mouse.vx * mouse.vx + mouse.vy * mouse.vy), 50);
+                    const push = force * (20 + cursorSpeed * 0.5); 
+                    const targetX = dynamicBaseX - Math.cos(angle) * push;
+                    const targetY = dynamicBaseY - Math.sin(angle) * push;
+
+                    p.vx += (targetX - p.x) * 0.15;
+                    p.vy += (targetY - p.y) * 0.15;
+                } else {
+                    p.vx += (dynamicBaseX - p.x) * 0.05;
+                    p.vy += (dynamicBaseY - p.y) * 0.05;
+                }
+
+                p.vx *= 0.82;
+                p.vy *= 0.82;
+                p.x += p.vx;
+                p.y += p.vy;
+            }
+
+            ctx.strokeStyle = '#ff003c';
+
+            for (let i = 0; i < points.length; i++) {
+                const p = points[i];
+
+                // Calculate Z-Depth (Pseudo-3D illusion)
+                const zDepth = p.z / 75.0; // Ranges from -1.0 (Deep) to 1.0 (Close)
+                
+                // Scale line thickness based on proximity to camera
+                ctx.lineWidth = Math.max(0.2, 1.2 + (zDepth * 0.8));
+
+                const kinetic = Math.sqrt(p.vx * p.vx + p.vy * p.vy);
+                const kineticAlpha = Math.min(kinetic * 0.05, 0.75);
+                
+                // Base brightness depends on altitude
+                const depthAlpha = 0.25 + (zDepth * 0.2); 
+                const finalAlpha = Math.max(0.05, Math.min(1.0, depthAlpha + kineticAlpha));
+                
+                const rightIndex = i + rows;
+                const bottomIndex = i + 1;
+
+                if (p.col < cols - 1 && rightIndex < points.length) {
+                    ctx.beginPath();
+                    ctx.globalAlpha = finalAlpha;
+                    ctx.moveTo(p.x, p.y);
+                    ctx.lineTo(points[rightIndex].x, points[rightIndex].y);
+                    ctx.stroke();
+                }
+
+                if (p.row < rows - 1 && bottomIndex < points.length) {
+                    ctx.beginPath();
+                    ctx.globalAlpha = finalAlpha;
+                    ctx.moveTo(p.x, p.y);
+                    ctx.lineTo(points[bottomIndex].x, points[bottomIndex].y);
+                    ctx.stroke();
+                }
+
+                // Draw the glowing nodes (Scale radius based on depth)
+                ctx.globalAlpha = Math.max(0.1, finalAlpha + 0.15);
+                ctx.fillStyle = '#ff003c';
+                ctx.beginPath();
+                const radius = Math.max(0.5, 2.0 + (zDepth * 1.5));
+                ctx.arc(p.x, p.y, radius, 0, Math.PI * 2);
+                ctx.fill();
+            }
+
+            mouse.vx *= 0.9;
+            mouse.vy *= 0.9;
+
+            requestAnimationFrame(renderPhysics);
+        }
+        renderPhysics();
+
+        // TRIGGER CINEMATIC WIPE ON NAVIGATION
+        function triggerCinematicWipe(url) {
+            document.getElementById('cinematic-overlay-layer1').classList.add('wipe-in-active');
+            document.getElementById('cinematic-overlay-layer2').classList.add('wipe-in-active');
+            
+            // Fire giant physics shockwaves
+            shockwaves.push({ x: width/2, y: height/2, radius: 0, force: 150 });
+            
+            setTimeout(() => {
+                window.location.href = url;
+            }, 450);
+        }
+
+        // Intercept Sidebar Link Clicks
+        document.querySelectorAll('.side-link').forEach(link => {
+            link.addEventListener('click', (e) => {
+                e.preventDefault();
+                const url = link.getAttribute('href');
+                if(url) {
+                    triggerCinematicWipe(url);
+                }
+            });
+        });
+
+        // Intercept Search Form Submission
+        document.getElementById('searchform').addEventListener('submit', (e) => {
+            e.preventDefault();
+            const query = document.getElementById('searchbox').value;
+            if(query.trim() !== '') {
+                const url = 'https://www.google.com/search?q=' + encodeURIComponent(query);
+                triggerCinematicWipe(url);
+            }
+        });
+
+</script>
+</body>
+</html>
