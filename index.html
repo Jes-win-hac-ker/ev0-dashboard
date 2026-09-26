@@ -639,12 +639,16 @@ body {
         renderPhysics();
 
         // TRIGGER CINEMATIC WIPE ON NAVIGATION
-        function triggerCinematicWipe(url) {
+        function triggerCinematicWipe(url, originX, originY) {
             document.getElementById('cinematic-overlay-layer1').classList.add('wipe-in-active');
             document.getElementById('cinematic-overlay-layer2').classList.add('wipe-in-active');
             
-            // Fire giant physics shockwaves
-            
+            // Fire giant physics shockwaves from the interaction point
+            if (originX !== undefined && originY !== undefined) {
+                shockwaves.push({ x: originX, y: originY, radius: 0, force: 150 });
+            } else {
+                shockwaves.push({ x: width/2, y: height/2, radius: 0, force: 150 });
+            }
             
             setTimeout(() => {
                 window.location.href = url;
@@ -657,7 +661,7 @@ body {
                 e.preventDefault();
                 const url = link.getAttribute('href');
                 if(url) {
-                    triggerCinematicWipe(url);
+                    triggerCinematicWipe(url, e.clientX, e.clientY);
                 }
             });
         });
@@ -668,7 +672,8 @@ body {
             const query = document.getElementById('searchbox').value;
             if(query.trim() !== '') {
                 const url = 'https://www.google.com/search?q=' + encodeURIComponent(query);
-                triggerCinematicWipe(url);
+                const searchRect = document.getElementById('searchbox').getBoundingClientRect();
+                triggerCinematicWipe(url, searchRect.left + searchRect.width/2, searchRect.top + searchRect.height/2);
             }
         });
 
