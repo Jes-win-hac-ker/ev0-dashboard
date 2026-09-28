@@ -731,8 +731,14 @@ body {
                 return;
             }
             
+            const queryFromGoogle = data[0];
             const suggestions = data[1];
             const currentInput = searchbox.value;
+            
+            // Ignore stale JSONP responses that arrived out of order!
+            if (queryFromGoogle.toLowerCase() !== currentInput.toLowerCase()) {
+                return;
+            }
             
             if (currentInput.trim() === '') {
                 ghostbox.value = '';
@@ -767,7 +773,7 @@ body {
             clearTimeout(debounceTimer);
             debounceTimer = setTimeout(() => {
                 const script = document.createElement('script');
-                script.src = `https://suggestqueries.google.com/complete/search?client=chrome&q=${encodeURIComponent(query)}&callback=handleGhostSuggest`;
+                script.src = `https://suggestqueries.google.com/complete/search?client=firefox&q=${encodeURIComponent(query)}&callback=handleGhostSuggest`;
                 document.body.appendChild(script);
                 script.onload = () => script.remove();
                 script.onerror = () => script.remove();
