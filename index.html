@@ -7,7 +7,7 @@
     <style>
 body {
             background-color: #050505;
-            color: #00ff41;
+            color: #ff003c;
             font-family: 'Orbitron', 'Courier New', Courier, monospace;
             display: flex;
             flex-direction: column;
@@ -16,7 +16,7 @@ body {
             height: 100vh;
             margin: 0;
             overflow: hidden;
-            text-shadow: 0 0 8px rgba(0, 255, 65, 0.6);
+            text-shadow: 0 0 8px rgba(255, 0, 60, 0.6);
         }
         /* The Canvas Physics Layer */
         #physics-canvas {
@@ -55,14 +55,14 @@ body {
             left: calc(50% - 240px);
             top: 50%;
             transform: translateY(-50%);
-            color: #00ff41;
+            color: #ff003c;
             font-weight: bold;
         }
         input[type="text"] {
             background: rgba(10, 10, 10, 0.8);
             backdrop-filter: blur(5px);
             border: 1px solid #333;
-            border-bottom: 2px solid #00ff41;
+            border-bottom: 2px solid #ff003c;
             color: #e0e0e0;
             padding: 12px 20px 12px 30px;
             width: 100%;
@@ -74,29 +74,29 @@ body {
             transition: all 0.3s ease;
         }
         input[type="text"]:focus {
-            border: 1px solid #00ff41;
-            box-shadow: 0 0 20px rgba(0, 255, 65, 0.4);
+            border: 1px solid #ff003c;
+            box-shadow: 0 0 20px rgba(255, 0, 60, 0.4);
             background: rgba(17, 17, 17, 0.9);
         }
         
         a {
-            color: #00ff41;
+            color: #ff003c;
             text-decoration: none;
-            border: 1px solid rgba(0, 255, 65, 0.3);
+            border: 1px solid rgba(255, 0, 60, 0.3);
             padding: 8px 24px;
             text-transform: uppercase;
             font-size: 1.2rem;
             letter-spacing: 1px;
             transition: all 0.2s ease;
-            background: rgba(0, 255, 65, 0.05);
+            background: rgba(255, 0, 60, 0.05);
             backdrop-filter: blur(3px);
         }
         a:hover {
-            background: #00ff41;
+            background: #ff003c;
             color: #050505;
-            box-shadow: 0 0 15px #00ff41;
+            box-shadow: 0 0 15px #ff003c;
             text-shadow: none;
-            border: 1px solid #00ff41;
+            border: 1px solid #ff003c;
         }
         .scanlines {
             position: fixed;
@@ -183,7 +183,7 @@ body {
         /* Apply the glowing border only to the wrapper, or keep it on the inputs */
         #ghostbox, #searchbox {
             border: 1px solid #333 !important;
-            border-bottom: 2px solid #00ff41 !important;
+            border-bottom: 2px solid #ff003c !important;
         }
 
     
@@ -227,7 +227,7 @@ body {
         .link-icon {
             z-index: 2;
             background: #050505;
-            color: #00ff41;
+            color: #ff003c;
             padding: 10px 12px; 
             min-width: 56px;
             height: 52px;
@@ -246,10 +246,10 @@ body {
             left: 0px;
             z-index: 1;
             background: rgba(10, 10, 10, 0.9);
-            border: 1px solid rgba(0, 255, 65, 0.4);
+            border: 1px solid rgba(255, 0, 60, 0.4);
             border-left: none;
             padding: 8px 15px 8px 50px; /* Sits behind icon */
-            color: #00ff41;
+            color: #ff003c;
             font-size: 0.85rem;
             font-weight: bold;
             letter-spacing: 2px;
@@ -263,8 +263,8 @@ body {
         .side-link:hover .link-icon {
             color: #fff;
             transform: scale(1.1);
-            text-shadow: 0 0 10px #00ff41;
-            filter: drop-shadow(0 0 8px rgba(0,255,65,0.8));
+            text-shadow: 0 0 10px #ff003c;
+            filter: drop-shadow(0 0 8px rgba(255,0,60,0.8));
         }
         .side-link:hover .link-text {
             opacity: 1;
@@ -285,7 +285,7 @@ body {
         #cinematic-overlay-layer1 {
             top: 0;
             height: 100vh;
-            background: repeating-linear-gradient(0deg, #00ff41, #00ff41 4px, #003b00 4px, #003b00 8px);
+            background: repeating-linear-gradient(0deg, #ff003c, #ff003c 4px, #cc0030 4px, #cc0030 8px);
             color: #050505;
             font-family: 'Noto Sans CJK JP', 'Orbitron', sans-serif;
             font-size: 25vw;
@@ -316,8 +316,8 @@ body {
 </head>
 <body class="dashboard-body">
 
-<div id="cinematic-overlay-layer1">0 1 0 1</div>
-<div id="cinematic-overlay-layer2">SYSTEM COMPROMISED // WAKE UP, NEO...</div>
+<div id="cinematic-overlay-layer1">警 告</div>
+<div id="cinematic-overlay-layer2">SYSTEM OVERRIDE // MAGI PROTOCOL ENGAGED</div>
 
     <canvas id="physics-canvas"></canvas>
     <div class="scanlines"></div>
@@ -344,7 +344,7 @@ body {
             <div class="link-icon"><svg viewBox="0 0 24 24" fill="currentColor" width="32" height="32"><path d="M20.32 4.14A19.98 19.98 0 0 0 15.22 2.5a.08.08 0 0 0-.08.04c-.21.4-.44.89-.6 1.3a18.3 18.3 0 0 0-5.11 0a12.83 12.83 0 0 0-.61-1.3a.08.08 0 0 0-.08-.04c-1.73.47-3.37 1.16-4.9 2.04a.07.07 0 0 0-.03.03C.68 9.94-.33 15.2.08 20.35a.08.08 0 0 0 .03.06a19.8 19.8 0 0 0 6 3.03a.08.08 0 0 0 .08-.03c.46-.63.88-1.29 1.25-1.98a.08.08 0 0 0-.04-.11c-1.42-.54-2.8-1.2-4.1-1.98a.08.08 0 0 1-.01-.13c.27-.2.53-.41.79-.62a.08.08 0 0 1 .08-.01c4.46 2.04 9.3 2.04 13.72 0a.08.08 0 0 1 .09 0c.26.21.52.42.79.62a.08.08 0 0 1-.01.13c-1.3.77-2.68 1.44-4.1 1.98a.08.08 0 0 0-.04.11c.37.69.8 1.35 1.26 1.98a.08.08 0 0 0 .09.03a19.78 19.78 0 0 0 6-3.03a.08.08 0 0 0 .03-.06c.49-5.91-1.07-11.08-4.04-15.53a.1.1 0 0 0-.03-.03zM8.02 16.14c-1.18 0-2.16-1.09-2.16-2.43s.96-2.43 2.16-2.43c1.2 0 2.17 1.1 2.16 2.43c0 1.34-.96 2.43-2.16 2.43zm7.95 0c-1.18 0-2.16-1.09-2.16-2.43s.96-2.43 2.16-2.43c1.2 0 2.17 1.1 2.16 2.43c0 1.34-.96 2.43-2.16 2.43z"/></svg></div>
         </a>
         <!-- AI Shortcuts -->
-        <div style="width: 25px; height: 2px; background: rgba(0,255,65,0.3); margin: 5px 0; border-radius: 0 2px 2px 0;"></div>
+        <div style="width: 25px; height: 2px; background: rgba(255,0,60,0.3); margin: 5px 0; border-radius: 0 2px 2px 0;"></div>
         <a href="https://chatgpt.com" class="side-link">
             <div class="link-text">CHATGPT</div>
             <div class="link-icon"><svg viewBox="0 0 24 24" width="32" height="32" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path stroke="none" d="M0 0h24v24H0z" fill="none"/><path d="M11.217 19.384a3.501 3.501 0 0 0 6.783 -1.217v-5.167l-6 -3.35"/><path d="M5.214 15.014a3.501 3.501 0 0 0 4.446 5.266l4.34 -2.534v-6.946"/><path d="M6 7.63c-1.391 -.236 -2.787 .395 -3.534 1.689a3.474 3.474 0 0 0 1.271 4.745l4.263 2.514l6 -3.348"/><path d="M12.783 4.616a3.501 3.501 0 0 0 -6.783 1.217v5.067l6 3.45"/><path d="M18.786 8.986a3.501 3.501 0 0 0 -4.446 -5.266l-4.34 2.534v6.946"/><path d="M18 16.302c1.391 .236 2.787 -.395 3.534 -1.689a3.474 3.474 0 0 0 -1.271 -4.745l-4.308 -2.514l-5.955 3.42"/></svg></div>
@@ -387,8 +387,8 @@ body {
 ███████╗ ╚████╔╝ ╚██████╔╝
 ╚══════╝  ╚═══╝   ╚═════╝  
             </pre>
-                        <div class="clock-widget" style="display: flex; flex-direction: column; justify-content: center; align-items: flex-start; padding-left: 30px; border-left: 2px solid rgba(0, 255, 65, 0.3);">
-                <pre id="digital-clock" style="font-size: 0.65rem; font-weight: bold; letter-spacing: 0px; text-shadow: 0 0 15px rgba(0, 255, 65, 0.6); line-height: 1.1; margin: 0; text-align: left;"></pre>
+                        <div class="clock-widget" style="display: flex; flex-direction: column; justify-content: center; align-items: flex-start; padding-left: 30px; border-left: 2px solid rgba(255, 0, 60, 0.3);">
+                <pre id="digital-clock" style="font-size: 0.65rem; font-weight: bold; letter-spacing: 0px; text-shadow: 0 0 15px rgba(255, 0, 60, 0.6); line-height: 1.1; margin: 0; text-align: left;"></pre>
             </div>
         </div>
         <div id="ui-elements">
@@ -585,7 +585,7 @@ body {
                 p.y += p.vy;
             }
 
-            ctx.strokeStyle = '#00ff41';
+            ctx.strokeStyle = '#ff003c';
 
             for (let i = 0; i < points.length; i++) {
                 const p = points[i];
@@ -624,7 +624,7 @@ body {
 
                 // Draw the glowing nodes (Scale radius based on depth)
                 ctx.globalAlpha = Math.max(0.1, finalAlpha + 0.15);
-                ctx.fillStyle = '#00ff41';
+                ctx.fillStyle = '#ff003c';
                 ctx.beginPath();
                 const radius = Math.max(0.5, 2.0 + (zDepth * 1.5));
                 ctx.arc(p.x, p.y, radius, 0, Math.PI * 2);
